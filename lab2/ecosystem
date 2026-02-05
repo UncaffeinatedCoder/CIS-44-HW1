@@ -1,0 +1,398 @@
+import java.util.Random;
+import java.util.Scanner;
+import java.util.ArrayList;
+
+
+// STEP 1: Abstract Animal Class
+abstract class Animal {
+    
+
+    public abstract String toString();
+    
+  
+    public abstract String getType();
+}
+
+// STEP 2: Concrete Animal Classes
+
+
+class Bear extends Animal {
+    
+    @Override
+    public String toString() {
+        return "B";
+    }
+    
+    @Override
+    public String getType() {
+        return "Bear";
+    }
+}
+
+
+class Fish extends Animal {
+    
+    @Override
+    public String toString() {
+        return "F";
+    }
+    
+    @Override
+    public String getType() {
+        return "Fish";
+    }
+}
+
+// MAIN ECOSYSTEM CLASS
+public class Ecosystem {
+    
+    private Animal[] river;      // The river array
+    private Random random;       // Random number generator
+    private int stepCount;       // Track number of steps
+    private int bearCount;       // Track bear population
+    private int fishCount;       // Track fish population
+    
+
+    public Ecosystem(int riverSize) {
+        this.river = new Animal[riverSize];
+        this.random = new Random();
+        this.stepCount = 0;
+        
+        populateRiver();
+    }
+    
+
+    private void populateRiver() {
+        bearCount = 0;
+        fishCount = 0;
+        
+        for (int i = 0; i < river.length; i++) {
+            int choice = random.nextInt(3); // 0, 1, or 2
+            
+            if (choice == 0) {
+                river[i] = new Bear();
+                bearCount++;
+            } else if (choice == 1) {
+                river[i] = new Fish();
+                fishCount++;
+            } else {
+                river[i] = null; // Empty cell
+            }
+        }
+    }
+    
+id runStep() {
+        stepCount++;
+        
+        // Create new array for next state
+        Animal[] newRiver = new Animal[river.length];
+        
+        // Track which animals have already been processed
+        boolean[] processed = new boolean[river.length];
+        
+        // Track births that need to happen (same species collision)
+        ArrayList<String> births = new ArrayList<>();
+        
+        // Process each cell in the current river
+        for (int i = 0; i < river.length; i++) {
+            if (river[i] == null || processed[i]) {
+                continue; // Skip empty cells and already processed animals
+            }
+            
+            // Decide movement: -1 (left), 0 (stay), +1 (right)
+            int move = random.nextInt(3) - 1;
+            int newPos = i + move;
+            
+            // Check bounds - if out of bounds, stay in place
+            if (newPos < 0 || newPos >= river.length) {
+                newPos = i;
+            }
+            
+            // Handle the move/collision
+            Animal currentAnimal = river[i];
+            
+            // Check if target position already has an animal in newRiver
+            if (newRiver[newPos] != null) {
+                // Collision with animal already placed in newRiver
+                handleCollision(currentAnimal, newRiver[newPos], newRiver, newPos, births);
+            }
+            // Check if target position has an animal in current river that hasn't moved
+            else if (newPos != i && river[newPos] != null && !processed[newPos]) {
+                // Collision with animal that hasn't been processed yet
+                Animal otherAnimal = river[newPos];
+                processed[newPos] = true; // Mark other animal as processed
+                handleCollision(currentAnimal, otherAnimal, newRiver, newPos, births);
+            }
+            else {
+                // No collision - just move
+                newRiver[newPos] = currentAnimal;
+            }
+            
+            processed[i] = true;
+        }
+        
+        // Process births - place new animals in random empty cells
+        for (String birthType : births) {
+            placeNewAnimal(newRiver, birthType);
+        }
+        
+        // Replace old river with new river
+        river = newRiver;
+        
+        // Update counts
+        updateCounts();
+    }
+    
+
+    private void handleCollision(Animal a1, Animal a2, Animal[] newRiver, int pos, ArrayList<String> births) {
+        boolean a1IsBear = a1 instanceof Bear;
+        boolean a2IsBear = a2 instanceof Bear;
+        
+        if (a1IsBear && a2IsBear) {
+            // Two bears collide - one stays, baby bear born
+            newRiver[pos] = a1;
+            births.add("Bear");
+        }
+        else if (!a1IsBear && !a2IsBear) {
+            // Two fish collide - one stays, baby fish born
+            newRiver[pos] = a1;
+            births.add("Fish");
+        }
+        else {
+            // Bear and Fish collide - Bear survives, Fish eaten
+            if (a1IsBear) {
+                newRiver[pos] = a1;
+            } else {
+                newRiver[pos] = a2;
+            }
+        }
+    }
+
+    private void placeNewAnimal(Animal[] targetRiver, String animalType) {
+        // Find all empty cells
+        ArrayList<Integer> emptyCells = new ArrayList<>();
+        for (int i = 0; i < targetRiver.length; i++) {
+            if (targetRiver[i] == null) {
+                emptyCells.add(i);
+            }
+        }
+        
+        // If there's an empty cell, place the new animal
+        if (!emptyCells.isEmpty()) {
+            int randomIndex = emptyCells.get(random.nextInt(emptyCells.size()));
+            if (animalType.equals("Bear")) {
+                targetRiver[randomIndex] = new Bear();
+            } else {
+                targetRiver[randomIndex] = new Fish();
+            }
+        }
+        // If no empty cells, the baby doesn't survive (no room)
+    }
+    
+
+    private void updateCounts() {
+        bearCount = 0;
+        fishCount = 0;
+        
+        for (Animal animal : river) {
+            if (animal instanceof Bear) {
+                bearCount++;
+            } else if (animal instanceof Fish) {
+                fishCount++;
+            }
+        }
+    }
+    
+
+    public void visualize() {
+        System.out.println("\n╔══════════════════════════════════════════════════════╗");
+        System.out.printf("║  Step: %-3d          Bears: %-3d    Fish: %-3d          ║%n", 
+                          stepCount, bearCount, fishCount);
+        System.out.println("╠══════════════════════════════════════════════════════╣");
+        
+        // Print river
+        System.out.print("║  ");
+        for (Animal animal : river) {
+            if (animal == null) {
+                System.out.print("- ");
+            } else {
+                System.out.print(animal.toString() + " ");
+            }
+        }
+        System.out.println(" ║");
+        
+        // Print position numbers (for reference)
+        System.out.print("║  ");
+        for (int i = 0; i < river.length; i++) {
+            System.out.print((i % 10) + " ");
+        }
+        System.out.println(" ║");
+        
+        System.out.println("╚══════════════════════════════════════════════════════╝");
+    }
+    
+ 
+    public void visualizeSimple() {
+        System.out.println("\n--------------------------------------------------");
+        System.out.printf("Step: %d  |  Bears: %d  |  Fish: %d%n", 
+                          stepCount, bearCount, fishCount);
+        System.out.println("--------------------------------------------------");
+        
+        System.out.print("River: ");
+        for (Animal animal : river) {
+            System.out.print(animal == null ? "-" : animal.toString());
+            System.out.print(" ");
+        }
+        System.out.println();
+        System.out.println("--------------------------------------------------");
+    }
+    
+  
+    public boolean isSimulationOver() {
+        return bearCount == 0 || fishCount == 0;
+    }
+
+    public int getBearCount() {
+        return bearCount;
+    }
+    
+ 
+    public int getFishCount() {
+        return fishCount;
+    }
+    
+    // MAIN METHOD
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        
+        System.out.println("==========================================");
+        System.out.println("       RIVER ECOSYSTEM SIMULATION");
+        System.out.println("   Abstract Classes & Inheritance Demo");
+        System.out.println("==========================================");
+        System.out.println();
+        System.out.println("Legend:");
+        System.out.println("  B = Bear");
+        System.out.println("  F = Fish");
+        System.out.println("  - = Empty");
+        System.out.println();
+        System.out.println("Rules:");
+        System.out.println("  - Animals move left, right, or stay put randomly");
+        System.out.println("  - Two same animals collide -> baby born");
+        System.out.println("  - Bear meets Fish -> Fish is eaten");
+        System.out.println();
+        
+        // Get river size from user
+        System.out.print("Enter river size (10-30 recommended): ");
+        int riverSize = 20; // default
+        if (scanner.hasNextInt()) {
+            riverSize = scanner.nextInt();
+            if (riverSize < 5) riverSize = 5;
+            if (riverSize > 50) riverSize = 50;
+        }
+        
+        // Create ecosystem
+        Ecosystem eco = new Ecosystem(riverSize);
+        
+        System.out.println("\n>>> Initial State:");
+        eco.visualizeSimple();
+        
+        // Menu for running simulation
+        boolean running = true;
+        while (running) {
+            System.out.println("\nOptions:");
+            System.out.println("  1. Run 1 step");
+            System.out.println("  2. Run 5 steps");
+            System.out.println("  3. Run 10 steps");
+            System.out.println("  4. Run until extinction");
+            System.out.println("  5. Reset simulation");
+            System.out.println("  6. Exit");
+            System.out.print("Choice: ");
+            
+            int choice = 1;
+            if (scanner.hasNextInt()) {
+                choice = scanner.nextInt();
+            } else {
+                scanner.next(); // clear invalid input
+            }
+            
+            switch (choice) {
+                case 1:
+                    eco.runStep();
+                    eco.visualizeSimple();
+                    break;
+                    
+                case 2:
+                    for (int i = 0; i < 5; i++) {
+                        eco.runStep();
+                        eco.visualizeSimple();
+                        if (eco.isSimulationOver()) break;
+                    }
+                    break;
+                    
+                case 3:
+                    for (int i = 0; i < 10; i++) {
+                        eco.runStep();
+                        eco.visualizeSimple();
+                        if (eco.isSimulationOver()) break;
+                    }
+                    break;
+                    
+                case 4:
+                    System.out.println("\nRunning until one species goes extinct...\n");
+                    int maxSteps = 1000;
+                    int steps = 0;
+                    while (!eco.isSimulationOver() && steps < maxSteps) {
+                        eco.runStep();
+                        eco.visualizeSimple();
+                        steps++;
+                        
+                        // Small delay for visualization
+                        try {
+                            Thread.sleep(200);
+                        } catch (InterruptedException e) {
+                            // Ignore
+                        }
+                    }
+                    
+                    if (eco.isSimulationOver()) {
+                        System.out.println("\n*** EXTINCTION EVENT ***");
+                        if (eco.getBearCount() == 0) {
+                            System.out.println("All bears have died! Fish win!");
+                        } else {
+                            System.out.println("All fish have been eaten! Bears win!");
+                        }
+                    } else {
+                        System.out.println("\nReached maximum steps without extinction.");
+                    }
+                    break;
+                    
+                case 5:
+                    eco = new Ecosystem(riverSize);
+                    System.out.println("\n>>> Simulation Reset!");
+                    eco.visualizeSimple();
+                    break;
+                    
+                case 6:
+                    running = false;
+                    System.out.println("\nThank you for using River Ecosystem Simulation!");
+                    break;
+                    
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+            
+            // Check for extinction after each action
+            if (eco.isSimulationOver() && choice != 4 && choice != 5 && choice != 6) {
+                System.out.println("\n*** EXTINCTION EVENT ***");
+                if (eco.getBearCount() == 0) {
+                    System.out.println("All bears have died! Fish dominate the river!");
+                } else {
+                    System.out.println("All fish have been eaten! Bears rule the river!");
+                }
+                System.out.println("Press 5 to reset or 6 to exit.");
+            }
+        }
+        
+        scanner.close();
+    }
+}
