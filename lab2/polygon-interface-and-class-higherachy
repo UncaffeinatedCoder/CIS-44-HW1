@@ -1,0 +1,399 @@
+import java.util.Scanner;
+
+// STEP 1: Define the Polygon Interface
+interface Polygon {
+    double area();
+    double perimeter();
+    String getName();
+}
+
+// STEP 2: Base Shape Classes (Implement Polygon Interface)
+
+
+class Triangle implements Polygon {
+    protected double sideA;
+    protected double sideB;
+    protected double sideC;
+    
+    public Triangle(double sideA, double sideB, double sideC) {
+        this.sideA = sideA;
+        this.sideB = sideB;
+        this.sideC = sideC;
+    }
+    
+    @Override
+    public double area() {
+        double s = perimeter() / 2; // semi-perimeter
+        return Math.sqrt(s * (s - sideA) * (s - sideB) * (s - sideC));
+    }
+    
+    @Override
+    public double perimeter() {
+        return sideA + sideB + sideC;
+    }
+    
+    @Override
+    public String getName() {
+        return "Triangle";
+    }
+}
+
+class Quadrilateral implements Polygon {
+    protected double side1, side2, side3, side4;
+    
+    public Quadrilateral(double side1, double side2, double side3, double side4) {
+        this.side1 = side1;
+        this.side2 = side2;
+        this.side3 = side3;
+        this.side4 = side4;
+    }
+    
+    @Override
+    public double area() {
+        return 0;
+    }
+    
+    @Override
+    public double perimeter() {
+        return side1 + side2 + side3 + side4;
+    }
+    
+    @Override
+    public String getName() {
+        return "Quadrilateral";
+    }
+}
+
+
+class Pentagon implements Polygon {
+    protected double side;
+    
+    public Pentagon(double side) {
+        this.side = side;
+    }
+    
+    @Override
+    public double area() {
+        return 0.25 * Math.sqrt(5 * (5 + 2 * Math.sqrt(5))) * side * side;
+    }
+    
+    @Override
+    public double perimeter() {
+        return 5 * side;
+    }
+    
+    @Override
+    public String getName() {
+        return "Pentagon";
+    }
+}
+
+
+class Hexagon implements Polygon {
+    protected double side;
+    
+    public Hexagon(double side) {
+        this.side = side;
+    }
+    
+    @Override
+    public double area() {
+        // Area of regular hexagon: (3 * sqrt(3) / 2) * s^2
+        return (3 * Math.sqrt(3) / 2) * side * side;
+    }
+    
+    @Override
+    public double perimeter() {
+        return 6 * side;
+    }
+    
+    @Override
+    public String getName() {
+        return "Hexagon";
+    }
+}
+
+
+class Octagon implements Polygon {
+    protected double side;
+    
+    public Octagon(double side) {
+        this.side = side;
+    }
+    
+    @Override
+    public double area() {
+        // Area of regular octagon: 2 * (1 + sqrt(2)) * s^2
+        return 2 * (1 + Math.sqrt(2)) * side * side;
+    }
+    
+    @Override
+    public double perimeter() {
+        return 8 * side;
+    }
+    
+    @Override
+    public String getName() {
+        return "Octagon";
+    }
+}
+
+// STEP 3: Specialized Triangle Classes (Inheritance)
+
+
+class IsoscelesTriangle extends Triangle {
+    
+    public IsoscelesTriangle(double equalSide, double base) {
+        // Two sides are equal, third is the base
+        super(equalSide, equalSide, base);
+    }
+    
+    @Override
+    public String getName() {
+        return "Isosceles Triangle";
+    }
+}
+
+/**
+ * EquilateralTriangle - Triangle with all sides equal
+ * Extends Triangle
+ */
+class EquilateralTriangle extends Triangle {
+    
+    public EquilateralTriangle(double side) {
+        // All three sides are equal
+        super(side, side, side);
+    }
+    
+    @Override
+    public double area() {
+        // Optimized formula for equilateral: (sqrt(3) / 4) * s^2
+        return (Math.sqrt(3) / 4) * sideA * sideA;
+    }
+    
+    @Override
+    public String getName() {
+        return "Equilateral Triangle";
+    }
+}
+
+// STEP 4: Specialized Quadrilateral Classes (Inheritance)
+
+
+class Rectangle extends Quadrilateral {
+    protected double length;
+    protected double width;
+    
+    public Rectangle(double length, double width) {
+        super(length, width, length, width);
+        this.length = length;
+        this.width = width;
+    }
+    
+    @Override
+    public double area() {
+        return length * width;
+    }
+    
+    @Override
+    public double perimeter() {
+        return 2 * (length + width);
+    }
+    
+    @Override
+    public String getName() {
+        return "Rectangle";
+    }
+}
+
+
+class Square extends Rectangle {
+    
+    public Square(double side) {
+        super(side, side);
+    }
+    
+    @Override
+    public String getName() {
+        return "Square";
+    }
+}
+
+
+// MAIN CLASS - Console User Interface
+
+public class PolygonCalculator {
+    
+    private static Scanner scanner = new Scanner(System.in);
+    
+    public static void main(String[] args) {
+        System.out.println("==========================================");
+        System.out.println("        POLYGON CALCULATOR                ");
+        System.out.println("  Interfaces, Inheritance & Polymorphism  ");
+        System.out.println("==========================================");
+        
+        boolean running = true;
+        
+        while (running) {
+            displayMenu();
+            int choice = getIntInput("Enter your choice: ");
+            
+            Polygon polygon = null; // Polymorphism - can hold any Polygon type
+            
+            switch (choice) {
+                case 1:
+                    polygon = createTriangle();
+                    break;
+                case 2:
+                    polygon = createIsoscelesTriangle();
+                    break;
+                case 3:
+                    polygon = createEquilateralTriangle();
+                    break;
+                case 4:
+                    polygon = createRectangle();
+                    break;
+                case 5:
+                    polygon = createSquare();
+                    break;
+                case 6:
+                    polygon = createPentagon();
+                    break;
+                case 7:
+                    polygon = createHexagon();
+                    break;
+                case 8:
+                    polygon = createOctagon();
+                    break;
+                case 9:
+                    running = false;
+                    System.out.println("\nThank you for using Polygon Calculator!");
+                    continue;
+                default:
+                    System.out.println("\nInvalid choice. Please try again.");
+                    continue;
+            }
+            
+            
+            if (polygon != null) {
+                displayResults(polygon);
+            }
+        }
+        
+        scanner.close();
+    }
+    
+    /**
+     * Displays the main menu
+     */
+    private static void displayMenu() {
+        System.out.println("\n------------------------------------------");
+        System.out.println("           SELECT A POLYGON               ");
+        System.out.println("------------------------------------------");
+        System.out.println("  TRIANGLES:                              ");
+        System.out.println("    1. Triangle (General)                 ");
+        System.out.println("    2. Isosceles Triangle                 ");
+        System.out.println("    3. Equilateral Triangle               ");
+        System.out.println("------------------------------------------");
+        System.out.println("  QUADRILATERALS:                         ");
+        System.out.println("    4. Rectangle                          ");
+        System.out.println("    5. Square                             ");
+        System.out.println("------------------------------------------");
+        System.out.println("  REGULAR POLYGONS:                       ");
+        System.out.println("    6. Pentagon (5 sides)                 ");
+        System.out.println("    7. Hexagon (6 sides)                  ");
+        System.out.println("    8. Octagon (8 sides)                  ");
+        System.out.println("------------------------------------------");
+        System.out.println("    9. Exit                               ");
+        System.out.println("------------------------------------------");
+    }
+    
+    
+    private static void displayResults(Polygon polygon) {
+        System.out.println("\n------------------------------------------");
+        System.out.println("              RESULTS                     ");
+        System.out.println("------------------------------------------");
+        System.out.printf("  Shape:     %-28s%n", polygon.getName());
+        System.out.printf("  Area:      %-28.4f%n", polygon.area());
+        System.out.printf("  Perimeter: %-28.4f%n", polygon.perimeter());
+        System.out.println("------------------------------------------");
+    }
+    
+  
+    // Factory Methods for Creating Polygons
+    
+    
+    private static Triangle createTriangle() {
+        System.out.println("\n--- Create Triangle ---");
+        double a = getDoubleInput("Enter side A: ");
+        double b = getDoubleInput("Enter side B: ");
+        double c = getDoubleInput("Enter side C: ");
+        return new Triangle(a, b, c);
+    }
+    
+    private static IsoscelesTriangle createIsoscelesTriangle() {
+        System.out.println("\n--- Create Isosceles Triangle ---");
+        double equalSide = getDoubleInput("Enter the equal side length: ");
+        double base = getDoubleInput("Enter the base length: ");
+        return new IsoscelesTriangle(equalSide, base);
+    }
+    
+    private static EquilateralTriangle createEquilateralTriangle() {
+        System.out.println("\n--- Create Equilateral Triangle ---");
+        double side = getDoubleInput("Enter side length: ");
+        return new EquilateralTriangle(side);
+    }
+    
+    private static Rectangle createRectangle() {
+        System.out.println("\n--- Create Rectangle ---");
+        double length = getDoubleInput("Enter length: ");
+        double width = getDoubleInput("Enter width: ");
+        return new Rectangle(length, width);
+    }
+    
+    private static Square createSquare() {
+        System.out.println("\n--- Create Square ---");
+        double side = getDoubleInput("Enter side length: ");
+        return new Square(side);
+    }
+    
+    private static Pentagon createPentagon() {
+        System.out.println("\n--- Create Regular Pentagon ---");
+        double side = getDoubleInput("Enter side length: ");
+        return new Pentagon(side);
+    }
+    
+    private static Hexagon createHexagon() {
+        System.out.println("\n--- Create Regular Hexagon ---");
+        double side = getDoubleInput("Enter side length: ");
+        return new Hexagon(side);
+    }
+    
+    private static Octagon createOctagon() {
+        System.out.println("\n--- Create Regular Octagon ---");
+        double side = getDoubleInput("Enter side length: ");
+        return new Octagon(side);
+    }
+    
+    // ============================================================
+    // Input Helper Methods
+    // ============================================================
+    
+    private static double getDoubleInput(String prompt) {
+        System.out.print(prompt);
+        while (!scanner.hasNextDouble()) {
+            System.out.print("Invalid input. " + prompt);
+            scanner.next();
+        }
+        return scanner.nextDouble();
+    }
+    
+    private static int getIntInput(String prompt) {
+        System.out.print(prompt);
+        while (!scanner.hasNextInt()) {
+            System.out.print("Invalid input. " + prompt);
+            scanner.next();
+        }
+        return scanner.nextInt();
+    }
+}
