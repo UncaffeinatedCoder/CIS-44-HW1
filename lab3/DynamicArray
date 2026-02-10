@@ -1,0 +1,176 @@
+
+public class DynamicArray<T> {
+    
+// Instance Variables
+    
+    private T[] data;
+    
+    private int size;
+    
+    private static final int INITIAL_CAPACITY = 10;
+    
+    // Constructor
+    
+ 
+    @SuppressWarnings("unchecked")
+    public DynamicArray() {
+        // Note: Cannot create generic array directly, so we create Object[] and cast
+        this.data = (T[]) new Object[INITIAL_CAPACITY];
+        this.size = 0;
+    }
+    
+ 
+    @SuppressWarnings("unchecked")
+    public DynamicArray(int initialCapacity) {
+        if (initialCapacity < 0) {
+            throw new IllegalArgumentException("Capacity cannot be negative: " + initialCapacity);
+        }
+        this.data = (T[]) new Object[initialCapacity];
+        this.size = 0;
+    }
+    
+    // Public Methods
+    
+    
+    public void add(T element) {
+        // Check if we need to resize
+        if (size >= data.length) {
+            resize();
+        }
+        
+        // Add the element at the next available position
+        data[size] = element;
+        size++;
+    }
+    
+
+    public T get(int index) {
+        // Validate index
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException(
+                "Index: " + index + ", Size: " + size
+            );
+        }
+        
+        return data[index];
+    }
+    
+
+    public T remove(int index) {
+        // Validate index
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException(
+                "Index: " + index + ", Size: " + size
+            );
+        }
+        
+        T removedElement = data[index];
+        
+        for (int i = index; i < size - 1; i++) {
+            data[i] = data[i + 1];
+        }
+        
+        data[size - 1] = null;
+        
+        size--;
+        
+        return removedElement;
+    }
+    
+
+    public int size() {
+        return size;
+    }
+
+    public boolean isEmpty() {
+        return size == 0;
+    }
+    
+
+    public int getCapacity() {
+        return data.length;
+    }
+
+    public T set(int index, T element) {
+        // Validate index
+        if (index < 0 || index >= size) {
+            throw new IndexOutOfBoundsException(
+                "Index: " + index + ", Size: " + size
+            );
+        }
+        
+        T oldElement = data[index];
+        data[index] = element;
+        return oldElement;
+    }
+    
+ 
+    @SuppressWarnings("unchecked")
+    public void clear() {
+        // Clear all references (help garbage collection)
+        for (int i = 0; i < size; i++) {
+            data[i] = null;
+        }
+        size = 0;
+    }
+    
+
+    public boolean contains(T element) {
+        return indexOf(element) >= 0;
+    }
+    
+
+    public int indexOf(T element) {
+        if (element == null) {
+            for (int i = 0; i < size; i++) {
+                if (data[i] == null) {
+                    return i;
+                }
+            }
+        } else {
+            for (int i = 0; i < size; i++) {
+                if (element.equals(data[i])) {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+    
+
+    @Override
+    public String toString() {
+        if (size == 0) {
+            return "[]";
+        }
+        
+        StringBuilder sb = new StringBuilder();
+        sb.append("[");
+        for (int i = 0; i < size; i++) {
+            sb.append(data[i]);
+            if (i < size - 1) {
+                sb.append(", ");
+            }
+        }
+        sb.append("]");
+        return sb.toString();
+    }
+    
+    // Private Methods
+    
+   
+    @SuppressWarnings("unchecked")
+    private void resize() {
+        int newCapacity = data.length == 0 ? 1 : data.length * 2;
+        
+        T[] newData = (T[]) new Object[newCapacity];
+        
+        for (int i = 0; i < size; i++) {
+            newData[i] = data[i];
+        }
+        
+        data = newData;
+        
+        System.out.println("  [Resized: capacity " + (newCapacity / 2) + " -> " + newCapacity + "]");
+    }
+}
