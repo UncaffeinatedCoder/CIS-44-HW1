@@ -1,0 +1,54 @@
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        TextEditor editor = new TextEditor();
+        
+        System.out.println("=== Text Editor with Undo/Redo ===\n");
+        
+        boolean running = true;
+        while (running) {
+            editor.printCurrent();
+            
+            System.out.println("\n1. Add Text");
+            System.out.println("2. Undo");
+            System.out.println("3. Redo");
+            System.out.println("4. Exit");
+            System.out.print("Choice: ");
+            
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // clear buffer
+            
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter text to add: ");
+                    String text = scanner.nextLine();
+                    editor.add(text);
+                    System.out.println("Text added.");
+                    break;
+                    
+                case 2:
+                    editor.undo();
+                    System.out.println("Undo performed.");
+                    break;
+                    
+                case 3:
+                    editor.redo();
+                    System.out.println("Redo performed.");
+                    break;
+                    
+                case 4:
+                    running = false;
+                    System.out.println("Goodbye!");
+                    break;
+                    
+                default:
+                    System.out.println("Invalid choice.");
+            }
+            System.out.println();
+        }
+        
+        scanner.close();
+    }
+}
