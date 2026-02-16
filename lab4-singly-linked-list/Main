@@ -1,0 +1,58 @@
+import java.util.Scanner;
+
+public class Main {
+    public static void main(String[] args) {
+        Scanner scanner = new Scanner(System.in);
+        Playlist playlist = new Playlist();
+        
+        System.out.println("=== Playlist Manager ===\n");
+        
+        boolean running = true;
+        while (running) {
+            System.out.println("\n1. Add Song");
+            System.out.println("2. Remove Song");
+            System.out.println("3. Play Next");
+            System.out.println("4. Display Playlist");
+            System.out.println("5. Exit");
+            System.out.print("Choice: ");
+            
+            int choice = scanner.nextInt();
+            scanner.nextLine(); 
+            
+            switch (choice) {
+                case 1:
+                    System.out.print("Enter song title: ");
+                    String title = scanner.nextLine();
+                    System.out.print("Enter artist: ");
+                    String artist = scanner.nextLine();
+                    playlist.addSong(new Song(title, artist));
+                    System.out.println("Added: \"" + title + "\" by " + artist);
+                    break;
+                    
+                case 2:
+                    System.out.print("Enter song title to remove: ");
+                    String removeTitle = scanner.nextLine();
+                    playlist.removeSong(removeTitle);
+                    break;
+                    
+                case 3:
+                    playlist.playNext();
+                    break;
+                    
+                case 4:
+                    playlist.displayPlaylist();
+                    break;
+                    
+                case 5:
+                    running = false;
+                    System.out.println("Goodbye!");
+                    break;
+                    
+                default:
+                    System.out.println("Invalid choice.");
+            }
+        }
+        
+        scanner.close();
+    }
+}
