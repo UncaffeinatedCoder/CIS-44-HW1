@@ -1,0 +1,115 @@
+public class Playlist {
+    
+    private static class Node {
+        Song song;
+        Node next;
+        
+        Node(Song song) {
+            this.song = song;
+            this.next = null;
+        }
+    }
+    
+    private Node head;
+    private Node tail;
+    private Node currentNode;
+    private int size;
+    
+    public Playlist() {
+        this.head = null;
+        this.tail = null;
+        this.currentNode = null;
+        this.size = 0;
+    }
+    
+    public void addSong(Song song) {
+        Node newNode = new Node(song);
+        
+        if (head == null) {
+            head = newNode;
+            tail = newNode;
+        } else {
+            tail.next = newNode;
+            tail = newNode;
+        }
+        size++;
+    }
+    
+    public void removeSong(String title) {
+        if (head == null) {
+            System.out.println("Playlist is empty.");
+            return;
+        }
+        
+        if (head.song.getTitle().equals(title)) {
+            if (currentNode == head) {
+                currentNode = head.next;
+            }
+            head = head.next;
+            if (head == null) {
+                tail = null;
+            }
+            size--;
+            System.out.println("Removed: " + title);
+            return;
+        }
+        
+        Node current = head;
+        while (current.next != null) {
+            if (current.next.song.getTitle().equals(title)) {
+                if (currentNode == current.next) {
+                    currentNode = current.next.next;
+                }
+                if (current.next == tail) {
+                    tail = current;
+                }
+                current.next = current.next.next;
+                size--;
+                System.out.println("Removed: " + title);
+                return;
+            }
+            current = current.next;
+        }
+        
+        System.out.println("Song not found: " + title);
+    }
+    
+    public void playNext() {
+        if (head == null) {
+            System.out.println("Playlist is empty.");
+            return;
+        }
+        
+        if (currentNode == null) {
+            currentNode = head;
+        }
+        
+        System.out.println("Now playing: " + currentNode.song);
+        
+        if (currentNode.next != null) {
+            currentNode = currentNode.next;
+        } else {
+            currentNode = head;
+        }
+    }
+    
+    public void displayPlaylist() {
+        if (head == null) {
+            System.out.println("Playlist is empty.");
+            return;
+        }
+        
+        System.out.println("--- Playlist (" + size + " songs) ---");
+        Node current = head;
+        int num = 1;
+        while (current != null) {
+            System.out.println(num + ". " + current.song);
+            current = current.next;
+            num++;
+        }
+    }
+    
+    public int getSize() {
+        return size;
+    }
+}
