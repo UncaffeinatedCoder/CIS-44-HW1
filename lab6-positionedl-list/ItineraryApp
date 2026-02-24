@@ -1,0 +1,44 @@
+public class ItineraryApp {
+
+    public static void main(String[] args) {
+
+        LinkedPositionalList<String> itinerary = new LinkedPositionalList<>();
+
+        // ── Step 1: Add the initial stops ─────────────────────────────
+        System.out.println("=== Building initial itinerary ===");
+        Position<String> losAngeles = itinerary.addLast("Los Angeles");
+        Position<String> tokyo      = itinerary.addLast("Tokyo");
+        Position<String> sydney     = itinerary.addLast("Sydney");
+        System.out.println("After initial adds : " + itinerary);
+
+        // ── Step 2: Insert a stop between Tokyo and Sydney ────────────
+        System.out.println("\n=== Inserting 'Seoul' between Tokyo and Sydney ===");
+        Position<String> seoul = itinerary.addAfter(tokyo, "Seoul");
+        System.out.println("After insert       : " + itinerary);
+
+        // ── Step 3: Add a stop at the very beginning ──────────────────
+        System.out.println("\n=== Adding 'New York' as the departure city ===");
+        itinerary.addFirst("New York");
+        System.out.println("After addFirst     : " + itinerary);
+
+        // ── Step 4: Update a stop using set() ─────────────────────────
+        System.out.println("\n=== Renaming 'Sydney' to 'Melbourne' ===");
+        String old = itinerary.set(sydney, "Melbourne");
+        System.out.println("Replaced '" + old + "' → 'Melbourne'");
+        System.out.println("After set          : " + itinerary);
+
+        // ── Step 5: Remove a stop using remove() ──────────────────────
+        System.out.println("\n=== Removing 'Seoul' from the itinerary ===");
+        itinerary.remove(seoul);
+        System.out.println("After remove       : " + itinerary);
+
+        // ── Step 6: Traverse with a for-each loop (proves Iterable) ───
+        System.out.println("\n=== Final Itinerary (for-each loop) ===");
+        int stop = 1;
+        for (String city : itinerary) {
+            System.out.println("  Stop " + stop++ + ": " + city);
+        }
+
+        System.out.println("\nTotal stops: " + itinerary.size());
+    }
+}
