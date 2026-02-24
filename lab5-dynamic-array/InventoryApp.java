@@ -26,27 +26,4 @@ public class InventoryApp {
         inv.display();
     }
 }
-```
 
-**Expected output:**
-```
-=== Inventory BEFORE combining ===
-  - Wooden Wand
-  - Dragon Scale
-  - Health Potion
-  - Iron Shield
-
->>> Attempting to combine 'Wooden Wand' and 'Dragon Scale'...
-  Combined [Wooden Wand] and [Dragon Scale] into [Magic Staff]!
-
-=== Inventory AFTER combining ===
-  - Health Potion
-  - Iron Shield
-  - Magic Staff
-
->>> Attempting to combine 'Wooden Wand' and 'Iron Shield'...
-  Could not combine: 'Wooden Wand' not found in inventory.
-
-=== Final Inventory ===
-  - Health Potion
-  - Magic Staff
