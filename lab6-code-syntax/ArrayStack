@@ -1,0 +1,90 @@
+/**
+ * Array-based implementation of the Stack interface.
+ * Based on the textbook implementation.
+ * @param <E> The type of elements stored in the stack
+ */
+public class ArrayStack<E> implements Stack<E> {
+    
+    /** Default array capacity */
+    public static final int CAPACITY = 1000;
+    
+    /** Generic array used for storage */
+    private E[] data;
+    
+    /** Index of the top element in stack */
+    private int t = -1;
+    
+    /**
+     * Constructs stack with default capacity.
+     */
+    public ArrayStack() {
+        this(CAPACITY);
+    }
+    
+    /**
+     * Constructs stack with given capacity.
+     * @param capacity the maximum capacity of the stack
+     */
+    @SuppressWarnings("unchecked")
+    public ArrayStack(int capacity) {
+        data = (E[]) new Object[capacity];
+    }
+    
+    /**
+     * Returns the number of elements in the stack.
+     * @return number of elements in the stack
+     */
+    @Override
+    public int size() {
+        return t + 1;
+    }
+    
+    /**
+     * Tests whether the stack is empty.
+     * @return true if the stack is empty, false otherwise
+     */
+    @Override
+    public boolean isEmpty() {
+        return t == -1;
+    }
+    
+    /**
+     * Inserts an element at the top of the stack.
+     * @param e the element to be inserted
+     * @throws IllegalStateException if the stack is full
+     */
+    @Override
+    public void push(E e) throws IllegalStateException {
+        if (size() == data.length) {
+            throw new IllegalStateException("Stack is full");
+        }
+        data[++t] = e;
+    }
+    
+    /**
+     * Returns, but does not remove, the element at the top of the stack.
+     * @return top element in the stack (or null if empty)
+     */
+    @Override
+    public E top() {
+        if (isEmpty()) {
+            return null;
+        }
+        return data[t];
+    }
+    
+    /**
+     * Removes and returns the top element from the stack.
+     * @return element removed (or null if empty)
+     */
+    @Override
+    public E pop() {
+        if (isEmpty()) {
+            return null;
+        }
+        E answer = data[t];
+        data[t] = null;  // Help garbage collection
+        t--;
+        return answer;
+    }
+}
