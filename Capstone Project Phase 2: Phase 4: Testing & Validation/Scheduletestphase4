@@ -1,0 +1,165 @@
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import static org.junit.jupiter.api.Assertions.*;
+
+/**
+ * SchedulerTest.java
+ * JUnit 5 test class for EmergencyRoomScheduler.
+ *
+ * To run:
+ *   1. Add JUnit 5 to your project (junit-platform-console-standalone JAR, or via Maven/Gradle)
+ *   2. Run: java -jar junit-platform-console-standalone.jar --scan-classpath
+ */
+public class SchedulerTest {
+
+    private EmergencyRoomScheduler er;
+
+    @BeforeEach
+    void setUp() {
+        er = new EmergencyRoomScheduler();  // fresh scheduler before every test
+    }
+
+    // ── Boundary Tests ───────────────────────────────────────────────────────
+
+    @Test
+    void testEmptyQueueIsEmpty() {
+        assertTrue(er.isEmpty(), "New scheduler should be empty");
+    }
+
+    @Test
+    void testEmptyQueueSizeIsZero() {
+        assertEquals(0, er.size(), "New scheduler size should be 0");
+    }
+
+    @Test
+    void testPollOnEmptyReturnsNull() {
+        assertNull(er.poll(), "poll() on empty queue should return null");
+    }
+
+    @Test
+    void testPeekOnEmptyReturnsNull() {
+        assertNull(er.peek(), "peek() on empty queue should return null");
+    }
+
+    // ── Logic Validation ─────────────────────────────────────────────────────
+
+    @Test
+    void testHighestPriorityServedFirst() {
+        er.admit(new Patient("Bob",   "Sprained Ankle",  2));
+        er.admit(new Patient("Alice", "Cardiac Arrest", 10));
+        er.admit(new Patient("Carol", "Broken Arm",      5));
+
+        assertEquals(10, er.poll().getPriorityScore(), "Highest priority (10) should be first");
+        assertEquals(5,  er.poll().getPriorityScore(), "Second highest (5) should be next");
+        assertEquals(2,  er.poll().getPriorityScore(), "Lowest priority (2) should be last");
+    }
+
+    @Test
+    void testPeekReturnsMaxWithoutRemoving() {
+        er.admit(new Patient("A", "Minor", 3));
+        er.admit(new Patient("B", "Critical", 9));
+
+        assertEquals(9, er.peek().getPriorityScore(), "peek() should return highest priority");
+        assertEquals(2, er.size(), "peek() should not remove patient");
+    }
+
+    @Test
+    void testSizeUpdatesCorrectly() {
+        assertEquals(0, er.size());
+        er.admit(new Patient("A", "Cond", 5));
+        assertEquals(1, er.size());
+        er.admit(new Patient("B", "Cond", 3));
+        assertEquals(2, er.size());
+        er.poll();
+        assertEquals(1, er.size());
+        er.poll();
+        assertEquals(0, er.size());
+        assertTrue(er.isEmpty());
+    }
+
+    @Test
+    void testQueueEmptyAfterAllPolls() {
+        er.admit(new Patient("A", "X", 4));
+        er.admit(new Patient("B", "Y", 7));
+        er.poll();
+        er.poll();
+        assertTrue(er.isEmpty(), "Queue should be empty after polling all patients");
+    }
+
+    // ── Edge Cases ───────────────────────────────────────────────────────────
+
+    @Test
+    void testTiedPriorityAllPolledCorrectly() {
+        er.admit(new Patient("X", "Cond A", 7));
+        er.admit(new Patient("Y", "Cond B", 7));
+        er.admit(new Patient("Z", "Cond C", 7));
+
+        assertEquals(7, er.poll().getPriorityScore(), "Tie: first poll should be 7");
+        assertEquals(7, er.poll().getPriorityScore(), "Tie: second poll should be 7");
+        assertEquals(7, er.poll().getPriorityScore(), "Tie: third poll should be 7");
+        assertTrue(er.isEmpty());
+    }
+
+    @Test
+    void testLateHighPriorityJumpsQueue() {
+        er.admit(new Patient("First",  "Minor Cut",    1));
+        er.admit(new Patient("Second", "Sore Throat",  2));
+        er.admit(new Patient("Late",   "Heart Attack", 10));  // admitted last
+
+        assertEquals("Late", er.poll().getName(),
+            "Late critical patient should jump to front of queue");
+    }
+
+    @Test
+    void testSinglePatient() {
+        er.admit(new Patient("Only", "Headache", 3));
+        assertEquals(3, er.peek().getPriorityScore());
+        assertEquals(3, er.poll().getPriorityScore());
+        assertTrue(er.isEmpty());
+    }
+
+    @Test
+    void testInvalidPriorityTooHighThrows() {
+        assertThrows(IllegalArgumentException.class,
+            () -> new Patient("Bad", "N/A", 11),
+            "Priority > 10 should throw IllegalArgumentException");
+    }
+
+    @Test
+    void testInvalidPriorityTooLowThrows() {
+        assertThrows(IllegalArgumentException.class,
+            () -> new Patient("Bad", "N/A", 0),
+            "Priority < 1 should throw IllegalArgumentException");
+    }
+
+    @Test
+    void testAdmitNullThrows() {
+        assertThrows(IllegalArgumentException.class,
+            () -> er.admit(null),
+            "Admitting null should throw IllegalArgumentException");
+    }
+
+    @Test
+    void testPollAfterEmptyThenReadmit() {
+        er.admit(new Patient("A", "X", 6));
+        er.poll();
+        assertNull(er.poll(), "poll() after draining should return null");
+
+        // Re-admit and confirm it works again
+        er.admit(new Patient("B", "Y", 4));
+        assertEquals(4, er.poll().getPriorityScore(),
+            "Scheduler should work correctly after being emptied and re-used");
+    }
+
+    @Test
+    void testMixedAdmitsAndPolls() {
+        er.admit(new Patient("A", "Cond", 3));
+        er.admit(new Patient("B", "Cond", 8));
+        assertEquals(8, er.poll().getPriorityScore());  // B out
+
+        er.admit(new Patient("C", "Cond", 10));         // C in
+        assertEquals(10, er.poll().getPriorityScore()); // C out immediately
+        assertEquals(3,  er.poll().getPriorityScore()); // A last
+        assertTrue(er.isEmpty());
+    }
+}
