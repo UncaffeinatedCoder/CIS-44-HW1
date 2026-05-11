@@ -1,0 +1,196 @@
+import java.util.ArrayList;
+
+// ─── Patient ──────────────────────────────────────────────────────────────────
+class Patient implements Comparable<Patient> {
+    private String name;
+    private String condition;
+    private int priorityScore;
+    private long arrivalTime;
+
+    public Patient(String name, String condition, int priorityScore) {
+        if (priorityScore < 1 || priorityScore > 10)
+            throw new IllegalArgumentException("Priority must be 1-10.");
+        this.name          = name;
+        this.condition     = condition;
+        this.priorityScore = priorityScore;
+        this.arrivalTime   = System.currentTimeMillis();
+    }
+
+    public String getName()       { return name; }
+    public String getCondition()  { return condition; }
+    public int getPriorityScore() { return priorityScore; }
+    public long getArrivalTime()  { return arrivalTime; }
+
+    @Override
+    public int compareTo(Patient other) {
+        return Integer.compare(this.priorityScore, other.priorityScore);
+    }
+
+    @Override
+    public String toString() {
+        return String.format("[Priority %2d] %-20s — %s", priorityScore, name, condition);
+    }
+}
+
+// ─── EmergencyRoomScheduler ───────────────────────────────────────────────────
+class EmergencyRoomScheduler {
+    private ArrayList<Patient> heap = new ArrayList<>();
+
+    private int parent(int j) { return (j - 1) / 2; }
+    private int left(int j)   { return 2 * j + 1; }
+    private int right(int j)  { return 2 * j + 2; }
+    private boolean hasLeft(int j)  { return left(j)  < heap.size(); }
+    private boolean hasRight(int j) { return right(j) < heap.size(); }
+
+    private void swap(int i, int j) {
+        Patient tmp = heap.get(i);
+        heap.set(i, heap.get(j));
+        heap.set(j, tmp);
+    }
+
+    public void admit(Patient p) {
+        if (p == null) throw new IllegalArgumentException("Patient cannot be null.");
+        heap.add(p);
+        upheap(heap.size() - 1);
+    }
+
+    public Patient poll() {
+        if (isEmpty()) return null;
+        Patient top  = heap.get(0);
+        Patient last = heap.remove(heap.size() - 1);
+        if (!heap.isEmpty()) { heap.set(0, last); downheap(0); }
+        return top;
+    }
+
+    public Patient peek() { return isEmpty() ? null : heap.get(0); }
+
+    private void upheap(int j) {
+        while (j > 0) {
+            int p = parent(j);
+            if (heap.get(j).compareTo(heap.get(p)) > 0) { swap(j, p); j = p; }
+            else break;
+        }
+    }
+
+    private void downheap(int j) {
+        while (hasLeft(j)) {
+            int larger = left(j);
+            if (hasRight(j) && heap.get(right(j)).compareTo(heap.get(left(j))) > 0)
+                larger = right(j);
+            if (heap.get(j).compareTo(heap.get(larger)) >= 0) break;
+            swap(j, larger); j = larger;
+        }
+    }
+
+    public boolean isEmpty() { return heap.isEmpty(); }
+    public int size()        { return heap.size(); }
+}
+
+// ─── Main Driver ──────────────────────────────────────────────────────────────
+public class Main {
+
+    static int passed = 0;
+    static int failed = 0;
+
+    static void check(String testName, boolean condition) {
+        if (condition) {
+            System.out.println("[PASS] " + testName);
+            passed++;
+        } else {
+            System.out.println("[FAIL] " + testName);
+            failed++;
+        }
+    }
+
+    public static void main(String[] args) {
+        System.out.println("=== Smart Scheduler — Phase 4 Test Driver ===\n");
+
+        // ── Boundary: empty queue ────────────────────────────────────────────
+        System.out.println("--- Boundary Tests ---");
+        EmergencyRoomScheduler er = new EmergencyRoomScheduler();
+
+        check("Empty queue isEmpty()",       er.isEmpty());
+        check("Empty queue size() == 0",     er.size() == 0);
+        check("poll() on empty returns null", er.poll() == null);
+        check("peek() on empty returns null", er.peek() == null);
+
+        // ── Logic: highest priority removed first ────────────────────────────
+        System.out.println("\n--- Logic Validation ---");
+        er.admit(new Patient("Bob",   "Sprained Ankle",  2));
+        er.admit(new Patient("Alice", "Cardiac Arrest", 10));
+        er.admit(new Patient("Carol", "Broken Arm",      5));
+        er.admit(new Patient("Dave",  "Severe Bleeding", 8));
+
+        check("peek() returns highest priority (10)",  er.peek().getPriorityScore() == 10);
+        check("size() == 4 after 4 admits",            er.size() == 4);
+
+        Patient first  = er.poll();
+        Patient second = er.poll();
+        Patient third  = er.poll();
+        Patient fourth = er.poll();
+
+        check("1st poll() priority == 10", first.getPriorityScore()  == 10);
+        check("2nd poll() priority == 8",  second.getPriorityScore() == 8);
+        check("3rd poll() priority == 5",  third.getPriorityScore()  == 5);
+        check("4th poll() priority == 2",  fourth.getPriorityScore() == 2);
+        check("Queue empty after all polls", er.isEmpty());
+
+        // ── Edge: tie in priority ────────────────────────────────────────────
+        System.out.println("\n--- Edge Cases ---");
+        er.admit(new Patient("X", "Condition A", 7));
+        er.admit(new Patient("Y", "Condition B", 7));
+        er.admit(new Patient("Z", "Condition C", 7));
+
+        Patient t1 = er.poll();
+        Patient t2 = er.poll();
+        Patient t3 = er.poll();
+
+        check("Tie: all polled at priority 7",
+            t1.getPriorityScore() == 7 &&
+            t2.getPriorityScore() == 7 &&
+            t3.getPriorityScore() == 7);
+
+        // ── Edge: late high-priority patient jumps queue ─────────────────────
+        er.admit(new Patient("Low",  "Minor Cut",    1));
+        er.admit(new Patient("Low2", "Sore Throat",  2));
+        er.admit(new Patient("CRIT", "Heart Attack", 10));  // admitted last
+
+        check("Late critical patient (10) goes first", er.poll().getPriorityScore() == 10);
+
+        // ── Edge: single patient ─────────────────────────────────────────────
+        EmergencyRoomScheduler single = new EmergencyRoomScheduler();
+        single.admit(new Patient("Only", "Headache", 3));
+        check("Single patient peek() == 3",  single.peek().getPriorityScore() == 3);
+        check("Single patient poll() == 3",  single.poll().getPriorityScore() == 3);
+        check("Single patient empty after poll", single.isEmpty());
+
+        // ── Edge: invalid priority throws exception ──────────────────────────
+        boolean threw = false;
+        try {
+            new Patient("Bad", "N/A", 11);  // invalid
+        } catch (IllegalArgumentException e) {
+            threw = true;
+        }
+        check("Priority 11 throws IllegalArgumentException", threw);
+
+        threw = false;
+        try {
+            new Patient("Bad", "N/A", 0);   // invalid
+        } catch (IllegalArgumentException e) {
+            threw = true;
+        }
+        check("Priority 0 throws IllegalArgumentException", threw);
+
+        // ── Edge: null patient throws exception ──────────────────────────────
+        threw = false;
+        try {
+            er.admit(null);
+        } catch (IllegalArgumentException e) {
+            threw = true;
+        }
+        check("Admitting null throws IllegalArgumentException", threw);
+
+        // ── Summary ──────────────────────────────────────────────────────────
+        System.out.println("\n=== Results: " + passed + " passed, " + failed + " failed ===");
+    }
+}
